@@ -11,6 +11,9 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "./interfaces/IMultiSigVault.sol";
 import "./interfaces/IBunzz.sol";
 
+/**
+ * @dev Contract module that allows implementing multi signature vault.
+ */
 contract MultiSigVault is
     Ownable,
     AccessControlEnumerable,
@@ -38,10 +41,18 @@ contract MultiSigVault is
     Counters.Counter private _txIds;
     mapping(uint256 => Transaction) public transactions;
 
+    /**
+     * @dev Grants `DEFAULT_ADMIN_ROLE` to `_msgSender()`.
+     */
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    /**
+     * @dev Set the main token of the vault
+     *
+     * If the main token exists and balance > 0, revert
+     */
     function connectToOtherContracts(address[] calldata contracts)
         public
         override
@@ -59,6 +70,12 @@ contract MultiSigVault is
         token = IERC20(contracts[0]);
     }
 
+    /**
+     * @dev Set the signer limit of the vault
+     * Requirements:
+     *
+     * the caller must be owner.
+     */
     function setSignerLimit(uint256 _signerLimit) public onlyOwner {
         require(_signerLimit > 0, "signer limit is 0");
         require(
@@ -68,6 +85,15 @@ contract MultiSigVault is
         signerLimit = _signerLimit;
     }
 
+    /**
+     * @dev Add new transaction
+     *
+     * Emits a {TransactionCreated} event.
+     *
+     * Requirements:
+     *
+     * the caller must have `SIGNER` role.
+     */
     function addTransaction(
         address payable _to,
         uint256 _amount,
@@ -91,6 +117,15 @@ contract MultiSigVault is
         return current;
     }
 
+    /**
+     * @dev Sign the transaction
+     *
+     * Emits a {TransactionSigned} event.
+     *
+     * Requirements:
+     *
+     * the caller must have `SIGNER` role.
+     */
     function signTransaction(uint256 _transactionId)
         public
         nonReentrant
@@ -107,6 +142,15 @@ contract MultiSigVault is
         emit TransactionSigned(msg.sender, _transactionId);
     }
 
+    /**
+     * @dev Reject the transaction
+     *
+     * Emits a {TransactionRejected} event.
+     *
+     * Requirements:
+     *
+     * the caller must have `SIGNER` role.
+     */
     function rejectTransaction(uint256 _transactionId)
         public
         nonReentrant
@@ -123,6 +167,15 @@ contract MultiSigVault is
         emit TransactionRejected(msg.sender, _transactionId);
     }
 
+    /**
+     * @dev Execute the transaction
+     *
+     * Emits a {TransactionCompleted} event.
+     *
+     * Requirements:
+     *
+     * the caller must have `SIGNER` role.
+     */
     function executeTransaction(uint256 _transactionId)
         public
         nonReentrant
@@ -160,11 +213,17 @@ contract MultiSigVault is
         );
     }
 
+    /**
+     * @dev Returns the balance of the token in vault.
+     */
     function balance() public view returns (uint256) {
         require(token != IERC20(address(0)), "invalid token");
         return token.balanceOf(address(this));
     }
 
+    /**
+     * @dev Emergency withdraw all balance to the owner
+     */
     function emergencyWithdraw() public onlyOwner {
         require(token != IERC20(address(0)), "invalid token");
         uint256 _amount = token.balanceOf(address(this));

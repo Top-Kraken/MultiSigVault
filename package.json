@@ -1,14 +1,16 @@
 {
-  "name": "multisigvault",
+  "name": "bunzz-multisigvault",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Bunzz MultiSigVault Module",
+  "author": "Top-Kraken",
+  "license": "MIT",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "npx hardhat clean",
+    "compile": "npx hardhat compile",
+    "build": "npm run clean && npm run compile",
+    "test": "npx hardhat test",
+    "deploy": "npx hardhat run scripts/deploy.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",
     "@openzeppelin/contracts": "^4.8.0",
