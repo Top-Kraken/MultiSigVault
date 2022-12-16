@@ -38,6 +38,11 @@ contract MultiSigVault is
         bool executed;
     }
 
+    modifier hasToken() {
+        require(token != IERC20(address(0)), "token isn't set");
+        _;
+    }
+
     Counters.Counter private _txIds;
     mapping(uint256 => Transaction) public transactions;
 
@@ -98,7 +103,7 @@ contract MultiSigVault is
         address payable _to,
         uint256 _amount,
         uint256 _unlockTime
-    ) public nonReentrant onlyRole(SIGNER) returns (uint256) {
+    ) public nonReentrant onlyRole(SIGNER) hasToken returns (uint256) {
         require(_to != address(0), "invalid to address");
         require(_amount > 0, "amount is 0");
         require(
@@ -130,6 +135,7 @@ contract MultiSigVault is
         public
         nonReentrant
         onlyRole(SIGNER)
+        hasToken
     {
         Transaction storage transaction = transactions[_transactionId];
 
@@ -155,6 +161,7 @@ contract MultiSigVault is
         public
         nonReentrant
         onlyRole(SIGNER)
+        hasToken
     {
         Transaction storage transaction = transactions[_transactionId];
 
@@ -180,10 +187,10 @@ contract MultiSigVault is
         public
         nonReentrant
         onlyRole(SIGNER)
+        hasToken
     {
         Transaction storage transaction = transactions[_transactionId];
 
-        require(token != IERC20(address(0)), "invalid token");
         if (transaction.unlockTime > 0) {
             require(
                 block.timestamp >= transaction.unlockTime,
@@ -216,16 +223,14 @@ contract MultiSigVault is
     /**
      * @dev Returns the balance of the token in vault.
      */
-    function balance() public view returns (uint256) {
-        require(token != IERC20(address(0)), "invalid token");
+    function balance() public view hasToken returns (uint256) {
         return token.balanceOf(address(this));
     }
 
     /**
      * @dev Emergency withdraw all balance to the owner
      */
-    function emergencyWithdraw() public onlyOwner {
-        require(token != IERC20(address(0)), "invalid token");
+    function emergencyWithdraw() public onlyOwner hasToken {
         uint256 _amount = token.balanceOf(address(this));
         require(_amount > 0, "balance is 0");
         SafeERC20.safeTransfer(token, owner(), _amount);
