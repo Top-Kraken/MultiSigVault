@@ -166,10 +166,13 @@ contract MultiSigVault is
         Transaction storage transaction = transactions[_transactionId];
 
         require(transaction.to != address(0), "invalid transaction");
-        require(transaction.signatures[msg.sender] != false, "already signed");
+        require(
+            transaction.signatures[msg.sender] != false,
+            "already rejected"
+        );
 
         transaction.signatures[msg.sender] = false;
-        transaction.signatureCount = transaction.signatureCount.add(1);
+        transaction.signatureCount = transaction.signatureCount.sub(1);
 
         emit TransactionRejected(msg.sender, _transactionId);
     }
@@ -197,6 +200,7 @@ contract MultiSigVault is
                 "transaction is locked"
             );
         }
+        require(transaction.to != address(0), "invalid transaction");
         require(!transaction.executed, "transaction already executed");
         require(
             token.balanceOf(address(this)) >= transaction.amount,
