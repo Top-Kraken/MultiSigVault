@@ -39,6 +39,11 @@ interface IMultiSigVault {
     );
 
     /**
+     * @dev Emitted when the signer limit is changed
+     */
+    event SignerLimitChange(uint256 signerLimit);
+
+    /**
      * @dev Returns the balance of the token in vault.
      */
     function balance() external view returns (uint256);

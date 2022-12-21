@@ -88,6 +88,8 @@ contract MultiSigVault is
             "signer limit is greater than member count"
         );
         signerLimit = _signerLimit;
+
+        emit SignerLimitChange(signerLimit);
     }
 
     /**
@@ -238,5 +240,57 @@ contract MultiSigVault is
         uint256 _amount = token.balanceOf(address(this));
         require(_amount > 0, "balance is 0");
         SafeERC20.safeTransfer(token, owner(), _amount);
+    }
+
+    /**
+     * @dev Returns number of confirmations of a transaction.
+     */
+    function getConfirmationCount(uint256 _transactionId)
+        public
+        view
+        returns (uint256)
+    {
+        return transactions[_transactionId].signatureCount;
+    }
+
+    /**
+     * @dev Returns number of transactions
+     */
+    function getTransactionCount(bool pending, bool executed)
+        public
+        view
+        returns (uint256 count)
+    {
+        uint256 current = _txIds.current();
+        for (uint256 i = 0; i < current; i++)
+            if (
+                (pending && !transactions[i].executed) ||
+                (executed && transactions[i].executed)
+            ) count += 1;
+    }
+
+    /**
+     * @dev Returns array with signer addresses, which confirmed transaction
+     */
+    function getConfirmations(uint256 _transactionId)
+        public
+        view
+        returns (address[] memory _confirmations)
+    {
+        uint256 count = 0;
+        uint256 members = getRoleMemberCount(SIGNER);
+        uint256 i;
+        address[] memory confirmationsTemp = new address[](members);
+        for (i = 0; i < members; i++)
+            if (
+                transactions[_transactionId].signatures[
+                    getRoleMember(SIGNER, i)
+                ]
+            ) {
+                confirmationsTemp[count] = getRoleMember(SIGNER, i);
+                count += 1;
+            }
+        _confirmations = new address[](count);
+        for (i = 0; i < count; i++) _confirmations[i] = confirmationsTemp[i];
     }
 }
